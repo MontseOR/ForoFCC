@@ -1,12 +1,6 @@
 -- ============================================================
 --  Foro Universitario · Script de Creación de Tablas
---  Normalizado hasta 3FN · Inspirado en Reddit
---  Compatible con MySQL / MariaDB
 -- ============================================================
-
--- Asegúrate de seleccionar/crear tu base de datos primero:
--- CREATE DATABASE foro_universitario CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- USE foro_universitario;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
