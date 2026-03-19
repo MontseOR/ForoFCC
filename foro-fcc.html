@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foro FCC — Facultad de Ciencias de la Computación BUAP</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <style>
+    /* ============================================================
+       VARIABLES Y RESET
+       ============================================================ */
+    :root {
+      --blue:       #1A6FD4;
+      --blue-dark:  #1558B0;
+      --blue-light: #EBF3FD;
+      --blue-mid:   #C3D9F5;
+      --red:        #E53935;
+      --gray-900: #111827;
+      --gray-700: #374151;
+      --gray-600: #4B5563;
+      --gray-500: #6B7280;
+      --gray-400: #9CA3AF;
+      --gray-300: #D1D5DB;
+      --gray-200: #E5E7EB;
+      --gray-100: #F3F4F6;
+      --gray-50:  #F9FAFB;
+      --white:    #FFFFFF;
+      --cat-eventos:     #1A6FD4;
+      --cat-materias:    #059669;
+      --cat-profesores:  #7C3AED;
+      --cat-avisos:      #D97706;
+      --cat-comunidades: #DB2777;
+      --font:        'Inter', sans-serif;
+      --radius:      8px;
+      --radius-lg:   12px;
+      --radius-full: 9999px;
+      --shadow:      0 1px 4px rgba(0,0,0,.08);
+      --shadow-lg:   0 8px 24px rgba(0,0,0,.12);
+      --navbar-h:    60px;
+      --sidebar-w:   220px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; }
+    body {
+      font-family: var(--font);
+      background: var(--gray-100);
+      color: var(--gray-900);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    a  { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ============================================================
+       SISTEMA DE VISTAS — navegación por :target
+       ============================================================ */
+
+    /* Por defecto todas las vistas ocultas */
+    .view { display: none; }
+
+    /* Vista activa por :target */
+    #feed:target,
+    #login:target,
+    #registro:target { display: block; }
+
+    /* Si ningún hash, mostrar el feed por defecto */
+    body:not(:has(:target)) #feed { display: block; }
+
+    /* ============================================================
+       NAVBAR
+       ============================================================ */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--navbar-h);
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex; align-items: center; gap: 14px;
+      padding: 0 18px;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    .navbar__hamburger {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius); flex-shrink: 0; cursor: pointer;
+    }
+    .navbar__hamburger:hover { background: var(--gray-100); }
+    .hamburger-icon { display: flex; flex-direction: column; gap: 4px; }
+    .hamburger-icon span {
+      display: block; width: 18px; height: 2px;
+      background: var(--gray-600); border-radius: 2px;
+    }
+
+    .navbar__brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+    .navbar__logo {
+      width: 34px; height: 34px;
+      background: var(--blue); border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--white); font-weight: 700; font-size: .95rem;
+    }
+    .navbar__brand-title { font-weight: 700; font-size: .88rem; line-height: 1.2; }
+    .navbar__brand-sub   { font-size: .68rem; color: var(--gray-500); }
+
+    .navbar__search {
+      flex: 1; max-width: 480px; margin: 0 auto; position: relative;
+    }
+    .navbar__search-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      color: var(--gray-400); pointer-events: none; display: flex;
+    }
+    .navbar__search input {
+      width: 100%; height: 36px;
+      background: var(--gray-100); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-full);
+      padding: 0 14px 0 34px;
+      font-size: .83rem; color: var(--gray-900); font-family: var(--font);
+      outline: none;
+    }
+    .navbar__search input::placeholder { color: var(--gray-400); }
+    .navbar__search input:focus {
+      background: var(--white); border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26,111,212,.12);
+    }
+
+    .navbar__actions { display: flex; align-items: center; gap: 9px; margin-left: auto; flex-shrink: 0; }
+
+    .btn-ghost {
+      height: 34px; padding: 0 14px;
+      border: 1px solid var(--gray-300); border-radius: var(--radius-full);
+      font-size: .8rem; font-weight: 600; color: var(--gray-700);
+      font-family: var(--font); cursor: pointer; background: var(--white);
+      display: inline-flex; align-items: center;
+    }
+    .btn-ghost:hover { background: var(--gray-100); }
+
+    .btn-solid {
+      height: 34px; padding: 0 14px;
+      background: var(--blue); color: var(--white);
+      border: none; border-radius: var(--radius-full);
+      font-size: .8rem; font-weight: 600; font-family: var(--font);
+      cursor: pointer; display: inline-flex; align-items: center;
+    }
+    .btn-solid:hover { background: var(--blue-dark); }
+
+    /* ============================================================
+       LAYOUT FEED
+       ============================================================ */
+    .page {
+      padding-top: var(--navbar-h);
+      display: flex; min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w); flex-shrink: 0;
+      background: var(--white); border-right: 1px solid var(--gray-200);
+      padding: 18px 10px;
+      position: fixed; top: var(--navbar-h); bottom: 0; left: 0;
+      overflow-y: auto;
+    }
+    .sidebar__label {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--gray-400);
+      padding: 0 8px 8px; display: block;
+    }
+    .sidebar__nav { display: flex; flex-direction: column; gap: 2px; margin-bottom: 18px; }
+    .sidebar__link {
+      display: flex; align-items: center; gap: 10px;
+      height: 38px; padding: 0 8px;
+      border-radius: var(--radius);
+      font-size: .85rem; font-weight: 500; color: var(--gray-700);
+    }
+    .sidebar__link:hover { background: var(--gray-100); }
+    .sidebar__link.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+    .sidebar__icon { width: 18px; text-align: center; display: flex; align-items: center; justify-content: center; }
+    .sidebar__divider { height: 1px; background: var(--gray-200); margin: 12px 0; }
+    .sidebar__stats {
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius); padding: 12px;
+    }
+    .sidebar__stats-title {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--gray-500); margin-bottom: 8px; display: block;
+    }
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 5px 0; border-bottom: 1px solid var(--gray-200); font-size: .8rem;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--gray-600); }
+    .stat-value { font-weight: 700; color: var(--blue); }
+
+    /* MAIN FEED */
+    .main {
+      flex: 1; padding: 24px 22px;
+      max-width: 860px; margin-left: var(--sidebar-w);
+    }
+    .feed-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .feed-title { font-size: 1.05rem; font-weight: 700; }
+    .feed-count { font-size: .8rem; color: var(--gray-500); margin-left: 6px; font-weight: 400; }
+
+    /* Tarjeta post */
+    .post-card {
+      background: var(--white); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg); padding: 16px 18px;
+      display: flex; gap: 14px; margin-bottom: 10px; cursor: pointer;
+    }
+    .post-card:hover { border-color: var(--blue-mid); box-shadow: var(--shadow); }
+
+    .post-votes {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px; min-width: 26px; padding-top: 2px;
+    }
+    .vote-arrow {
+      font-size: .72rem; color: var(--gray-400); line-height: 1;
+      padding: 3px 4px; border-radius: 4px; cursor: pointer;
+      border: none; background: none; font-family: var(--font);
+    }
+    .vote-arrow:hover      { color: var(--blue); background: var(--blue-light); }
+    .vote-arrow.down:hover { color: var(--red); background: #fef2f2; }
+    .vote-num { font-size: .85rem; font-weight: 700; color: var(--red); line-height: 1; }
+
+    .post-body { flex: 1; min-width: 0; }
+    .post-meta { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; flex-wrap: wrap; }
+    .post-time   { font-size: .74rem; color: var(--gray-400); }
+    .post-author { font-size: .78rem; color: var(--gray-500); }
+    .post-author strong { color: var(--gray-700); font-weight: 600; }
+    .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--gray-300); flex-shrink: 0; }
+    .post-title { font-size: .97rem; font-weight: 700; color: var(--gray-900); margin-bottom: 7px; line-height: 1.4; }
+    .post-card:hover .post-title { color: var(--blue); }
+    .post-excerpt {
+      font-size: .82rem; color: var(--gray-600); line-height: 1.55; margin-bottom: 12px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .post-actions { display: flex; align-items: center; gap: 14px; }
+    .post-action {
+      display: flex; align-items: center; gap: 5px;
+      font-size: .76rem; color: var(--gray-500); font-weight: 500;
+      padding: 3px 7px; border-radius: 5px; cursor: pointer;
+    }
+    .post-action:hover { color: var(--blue); background: var(--blue-light); }
+
+    /* Badges */
+    .badge {
+      display: inline-flex; align-items: center;
+      height: 20px; padding: 0 8px; border-radius: var(--radius-full);
+      font-size: .68rem; font-weight: 700; color: var(--white); white-space: nowrap;
+    }
+    .badge-eventos     { background: var(--cat-eventos); }
+    .badge-materias    { background: var(--cat-materias); }
+    .badge-profesores  { background: var(--cat-profesores); }
+    .badge-avisos      { background: var(--cat-avisos); }
+    .badge-comunidades { background: var(--cat-comunidades); }
+
+    /* ============================================================
+       VISTAS DE AUTENTICACIÓN
+       ============================================================ */
+    .auth-page {
+      min-height: 100vh; background: var(--gray-100);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .auth-card {
+      background: var(--white); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg); width: 100%; max-width: 400px;
+      padding: 30px 28px; box-shadow: var(--shadow-lg); position: relative;
+    }
+    .auth-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 28px; height: 28px; border-radius: var(--radius-full);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gray-400); font-size: .95rem;
+      border: 1px solid var(--gray-200); background: none; cursor: pointer;
+    }
+    .auth-close:hover { background: var(--gray-100); color: var(--gray-700); }
+    .auth-title    { font-size: 1.3rem; font-weight: 700; margin-bottom: 3px; }
+    .auth-subtitle { font-size: .82rem; color: var(--gray-500); margin-bottom: 22px; }
+
+    .alert {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 9px 12px; border-radius: var(--radius); margin-bottom: 18px;
+      font-size: .81rem; font-weight: 500;
+      background: #fff5f5; border: 1px solid #fecaca; color: #b91c1c;
+    }
+
+    .form-group  { margin-bottom: 16px; }
+    .form-label  { display: block; font-size: .8rem; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+    .input-wrap  { position: relative; }
+    .input-icon  {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      color: var(--gray-400); pointer-events: none; display: flex;
+    }
+    .form-input {
+      width: 100%; height: 42px;
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius); padding: 0 12px 0 36px;
+      font-size: .86rem; color: var(--gray-900); font-family: var(--font); outline: none;
+    }
+    .form-input::placeholder { color: var(--gray-400); }
+    .form-input:focus {
+      background: var(--white); border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26,111,212,.12);
+    }
+    .form-forgot {
+      display: block; text-align: right;
+      font-size: .76rem; color: var(--blue); font-weight: 600; margin-top: 5px;
+    }
+    .form-forgot:hover { text-decoration: underline; }
+
+    .checkbox-wrap {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: .81rem; color: var(--gray-600); cursor: pointer; line-height: 1.5;
+    }
+    .checkbox-wrap input { margin-top: 2px; accent-color: var(--blue); flex-shrink: 0; }
+    .checkbox-wrap a { color: var(--blue); font-weight: 600; }
+
+    .btn-primary {
+      width: 100%; height: 44px;
+      background: var(--blue); color: var(--white);
+      border: none; border-radius: var(--radius);
+      font-size: .88rem; font-weight: 700; font-family: var(--font);
+      cursor: pointer; margin-top: 4px;
+    }
+    .btn-primary:hover { background: var(--blue-dark); }
+
+    .auth-divider { display: flex; align-items: center; gap: 10px; margin: 20px 0 16px; }
+    .auth-divider::before,
+    .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+    .auth-divider-dot { width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid var(--gray-300); }
+
+    .auth-footer { text-align: center; font-size: .81rem; color: var(--gray-500); }
+    .auth-footer a { color: var(--blue); font-weight: 700; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 640px) {
+      .sidebar { display: none; }
+      .main    { margin-left: 0; }
+      .navbar__brand-sub { display: none; }
+      .auth-card { padding: 22px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     NAVBAR — siempre visible
+════════════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="navbar__hamburger">
+    <div class="hamburger-icon">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <a href="#feed" class="navbar__brand">
+    <div class="navbar__logo">F</div>
+    <div>
+      <div class="navbar__brand-title">Foro FCC</div>
+      <div class="navbar__brand-sub">Facultad de Ciencias de la Computación</div>
+    </div>
+  </a>
+
+  <div class="navbar__search">
+    <span class="navbar__search-icon">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/>
+        <path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+      </svg>
+    </span>
+    <input type="search" placeholder="Buscar en el foro..." />
+  </div>
+
+  <div class="navbar__actions">
+    <a href="#login" class="btn-ghost">Iniciar Sesión</a>
+    <a href="#registro" class="btn-solid">Registrarse</a>
+  </div>
+</nav>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     VISTA: FEED PRINCIPAL
+════════════════════════════════════════════════════════════ -->
+<div id="feed" class="view">
+  <div class="page">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <span class="sidebar__label">Categorías</span>
+      <nav class="sidebar__nav">
+        <a href="#feed" class="sidebar__link active">
+          <span class="sidebar__icon">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"/>
+            </svg>
+          </span>
+          Todos
+        </a>
+        <a href="#feed" class="sidebar__link">
+          <span class="sidebar__icon">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </span>
+          Profesores
+        </a>
+        <a href="#feed" class="sidebar__link">
+          <span class="sidebar__icon">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </span>
+          Materias
+        </a>
+        <a href="#feed" class="sidebar__link">
+          <span class="sidebar__icon">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </span>
+          Avisos
+        </a>
+        <a href="#feed" class="sidebar__link">
+          <span class="sidebar__icon">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </span>
+          Eventos
+        </a>
+        <a href="#feed" class="sidebar__link">
+          <span class="sidebar__icon">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+          </span>
+          Comunidades
+        </a>
+      </nav>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__stats">
+        <span class="sidebar__stats-title">Estadísticas</span>
+        <div class="stat-row">
+          <span class="stat-label">Miembros</span>
+          <span class="stat-value">1,234</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Posts hoy</span>
+          <span class="stat-value">24</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Activos ahora</span>
+          <span class="stat-value">83</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- FEED -->
+    <main class="main">
+      <div class="feed-header">
+        <div>
+          <span class="feed-title">Todos los Posts</span>
+          <span class="feed-count">8 publicaciones encontradas</span>
+        </div>
+      </div>
+
+      <!-- Post 1 -->
+      <div class="post-card">
+        <div class="post-votes">
+          <button class="vote-arrow">▲</button>
+          <span class="vote-num">89</span>
+          <button class="vote-arrow down">▼</button>
+        </div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="badge badge-eventos">Eventos</span>
+            <span class="post-author">Publicado por <strong>u/admin_eventos</strong></span>
+            <span class="meta-dot"></span>
+            <span class="post-time">hace 5 horas</span>
+          </div>
+          <h2 class="post-title">Hackathon FCC 2026 — ¡Inscripciones abiertas!</h2>
+          <p class="post-excerpt">
+            Nos complace anunciar la tercera edición del Hackathon FCC. Este año tendremos
+            premios de hasta $5000 y mentorías con empresas tecnológicas líderes.
+            ¡No te lo pierdas! Las inscripciones cierran el 5 de febrero.
+          </p>
+          <div class="post-actions">
+            <span class="post-action">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+              23 comentarios
+            </span>
+            <span class="post-action">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+              </svg>
+              Compartir
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post 2 -->
+      <div class="post-card">
+        <div class="post-votes">
+          <button class="vote-arrow">▲</button>
+          <span class="vote-num">65</span>
+          <button class="vote-arrow down">▼</button>
+        </div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="badge badge-eventos">Eventos</span>
+            <span class="post-author">Publicado por <strong>u/admin_eventos</strong></span>
+            <span class="meta-dot"></span>
+            <span class="post-time">hace 12 horas</span>
+          </div>
+          <h2 class="post-title">Charla sobre IA y Machine Learning — Próximo Miércoles</h2>
+          <p class="post-excerpt">
+            El departamento de ciencias de la computación invita a una charla especial
+            sobre inteligencia artificial y machine learning. Miércoles 11 de febrero,
+            11 am, en el auditorio.
+          </p>
+          <div class="post-actions">
+            <span class="post-action">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+              9 comentarios
+            </span>
+            <span class="post-action">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+              </svg>
+              Compartir
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post 3 -->
+      <div class="post-card">
+        <div class="post-votes">
+          <button class="vote-arrow">▲</button>
+          <span class="vote-num">34</span>
+          <button class="vote-arrow down">▼</button>
+        </div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="badge badge-comunidades">Comunidades</span>
+            <span class="post-author">Publicado por <strong>u/club_web</strong></span>
+            <span class="meta-dot"></span>
+            <span class="post-time">hace 2 horas</span>
+          </div>
+          <h2 class="post-title">Club de Desarrollo Web — Primera reunión este viernes</h2>
+          <p class="post-excerpt">
+            ¡Hola a todos! El Club de Desarrollo Web tendrá su primera reunión este viernes
+            a las 4pm en el CC01 salón 001. ¡Todos son bienvenidos!
+          </p>
+          <div class="post-actions">
+            <span class="post-action">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+              12 comentarios
+            </span>
+            <span class="post-action">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+              </svg>
+              Compartir
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post 4 -->
+      <div class="post-card">
+        <div class="post-votes">
+          <button class="vote-arrow">▲</button>
+          <span class="vote-num">8</span>
+          <button class="vote-arrow down">▼</button>
+        </div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="badge badge-materias">Materias</span>
+            <span class="post-author">Publicado por <strong>u/pedro_47</strong></span>
+            <span class="meta-dot"></span>
+            <span class="post-time">hace 45 minutos</span>
+          </div>
+          <h2 class="post-title">Duda sobre complejidad algorítmica en el ejercicio 4</h2>
+          <p class="post-excerpt">
+            Tengo una duda con el ejercicio 4 de la tarea de Análisis de Algoritmos.
+            ¿La complejidad del algoritmo de búsqueda binaria es O(log n) o O(n)?
+            No me queda claro después de la explicación.
+          </p>
+          <div class="post-actions">
+            <span class="post-action">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+              23 comentarios
+            </span>
+            <span class="post-action">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+              </svg>
+              Compartir
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     VISTA: LOGIN
+════════════════════════════════════════════════════════════ -->
+<div id="login" class="view">
+  <div class="auth-page">
+    <div class="auth-card">
+
+      <a href="#feed" class="auth-close">✕</a>
+
+      <h1 class="auth-title">Iniciar Sesión</h1>
+      <p class="auth-subtitle">Bienvenido de vuelta al Foro FCC</p>
+
+      <div class="form-group">
+        <label class="form-label" for="login-email">Correo Institucional</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </span>
+          <input class="form-input" type="email" id="login-email" placeholder="nombre@alumno.buap.mx" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-pass">Contraseña</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </span>
+          <input class="form-input" type="password" id="login-pass" placeholder="••••••••" />
+        </div>
+        <a href="#" class="form-forgot">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <button class="btn-primary">Iniciar Sesión</button>
+
+      <div class="auth-divider"><span class="auth-divider-dot"></span></div>
+
+      <p class="auth-footer">
+        ¿No tienes cuenta? <a href="#registro">Regístrate aquí</a>
+      </p>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     VISTA: REGISTRO
+════════════════════════════════════════════════════════════ -->
+<div id="registro" class="view">
+  <div class="auth-page">
+    <div class="auth-card">
+
+      <a href="#feed" class="auth-close">✕</a>
+
+      <h1 class="auth-title">Crear Cuenta</h1>
+      <p class="auth-subtitle">Únete a la comunidad FCC</p>
+
+      <div class="alert">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+          <path stroke-linecap="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        Por favor completa todos los campos.
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-user">Nombre de Usuario</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </span>
+          <input class="form-input" type="text" id="reg-user" placeholder="Usuario" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-email">Correo Institucional</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </span>
+          <input class="form-input" type="email" id="reg-email" placeholder="nombre@alumno.buap.mx" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-pass">Contraseña</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </span>
+          <input class="form-input" type="password" id="reg-pass" placeholder="••••••••" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-confirm">Confirmar Contraseña</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </span>
+          <input class="form-input" type="password" id="reg-confirm" placeholder="••••••••" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-wrap">
+          <input type="checkbox" />
+          Acepto los <a href="#">términos y condiciones</a> y la
+          <a href="#">política de privacidad</a>
+        </label>
+      </div>
+
+      <button class="btn-primary">Crear Cuenta</button>
+
+      <div class="auth-divider"><span class="auth-divider-dot"></span></div>
+
+      <p class="auth-footer">
+        ¿Ya tienes cuenta? <a href="#login">Iniciar Sesión</a>
+      </p>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
